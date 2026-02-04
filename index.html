@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroHeaven 1.0</title>
+
+<!-- Tailwind, GSAP, Chart.js -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap" rel="stylesheet">
+
+<style>
+:root{--glass:rgba(255,55,255,.15);}
+body{font-family:Inter,sans-serif;background:radial-gradient(circle at top,#bf6b99,#572649);color:white;overflow-x:hidden;margin:0;padding-top:70px;}
+.glass{background:var(--glass);backdrop-filter:blur(20px);border-radius:28px;border:1px solid rgba(255,255,255,.25);}
+.hidden{display:none;}
+button{cursor:pointer;}
+textarea,input{outline:none;}
+
+/* Focus Game Feedback Effects */
+#focusSymbol {
+  font-size: 64px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+/* Correct tap → calm glow */
+.focus-correct {
+  box-shadow: 0 0 25px rgba(0, 255, 180, 0.8);
+  transform: scale(1.1);
+}
+
+/* Wrong tap → gentle shake */
+.focus-wrong {
+  animation: softShake 0.3s;
+}
+
+@keyframes softShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+/* Meditation Styles */
+#meditationSection {
+  text-align: center;
+  margin-top: 40px;
+}
+
+#breathingCircle {
+  width: 120px;
+  height: 120px;
+  margin: 20px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, #6ee7b7, #3b82f6);
+  animation: none;
+}
+
+@keyframes breatheInOut {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+#moodResponse {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 15px;
+  line-height: 1.6;
+}
+#depressionModal ::-webkit-scrollbar {
+  width: 6px;
+}
+
+#depressionModal ::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 10px;
+}
+.music-btn{
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: none;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+.music-btn:hover{
+  background: rgba(255,255,255,0.25);
+}
+
+</style>
+</head>
+<body>
+
+<!-- HEADER + NAV -->
+<header class="glass fixed top-0 left-0 w-full flex justify-between items-center px-6 py-3 z-50">
+  <h1 class="text-2xl font-bold">🧠 NeuroHeaven</h1>
+  <nav class="flex gap-4 text-sm md:text-base">
+    <button onclick="showPage('homePage')">Home</button>
+    <button onclick="showPage('moodPage')">Mood</button>
+    <button onclick="showPage('sleepPage')">Sleep</button>
+    <button onclick="showPage('journalPage')">Journal</button>
+    <button onclick="showPage('focusGamePage')">Focus Game</button>
+    <button onclick="showPage('tasksPage')">Tasks</button>
+    <button onclick="showPage('checkupPage')">Check-Up</button>
+    <button onclick="showPage('aibuddyPage')">AI Buddy</button>
+  </nav>
+</header>
+
+<div class="px-6 py-10">
+
+<!-- HOME -->
+<section id="homePage" class="p-6">
+  <h2 class="text-4xl font-bold mb-6" style="text-align: center;">Welcome to NeuroHeaven 🧠</h2>
+  <p class="text-lg text-slate-300" style="text-align: center;"><b>A calm, visual space for your mind</b></p>
+</section>
+<section id="checkupPage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-6">Check-Up 🩺</h2>
+
+  <div class="flex flex-col gap-4">
+    <button id="launchDepression"
+      class="bg-pink-600 px-6 py-3 rounded-lg font-bold">
+      Depression Self-Check
+    </button>
+
+    <button id="launchDailyCheck"
+      class="bg-cyan-600 px-6 py-3 rounded-lg font-bold">
+      Daily Care Check
+    </button>
+  </div>
+<!-- Progress Graph -->
+<div class="glass p-6 mt-10 rounded-2xl">
+  <h3 class="text-xl font-bold mb-4">Your Progress Over Time 📈</h3>
+  <canvas id="checkupGraph" height="220"></canvas>
+</div>
+
+</section>
+
+<!-- Home-only Meditation Wrapper -->
+<section id="homeMeditation" class="hidden">
+
+  <section id="meditationSection">
+    <h2>🧘 Meditation</h2>
+    <p id="meditationText">Breathe with the circle</p>
+
+    <div id="breathingCircle"></div>
+
+    <div style="margin-top: 15px;">
+      <button onclick="startMeditation(1)">1 min</button>
+      <button onclick="startMeditation(3)">3 min</button>
+      <button onclick="startMeditation(5)">5 min</button>
+      <button onclick="stopMeditation()">Stop</button>
+    </div>
+
+    <p id="meditationStatus"></p>
+  </section>
+
+</section>
+
+<!-- MOOD -->
+<section id="moodPage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-4">Mood Logging 🔮</h2>
+  <div class="flex justify-center gap-6 flex-wrap mb-4">
+    <span class="emoji cursor-pointer text-3xl" data-value="5">😊</span>
+    <span class="emoji cursor-pointer text-3xl" data-value="3">😐</span>
+    <span class="emoji cursor-pointer text-3xl" data-value="2">😟</span>
+    <span class="emoji cursor-pointer text-3xl" data-value="1">😔</span>
+    <span class="emoji cursor-pointer text-3xl" data-value="0">😡</span>
+  </div>
+  <p id="moodSaved" class="mt-4 text-cyan-300 hidden">Mood saved 💜</p>
+  <canvas id="chart" class="mt-6"></canvas>
+  <button id="forecastMood" class="bg-yellow-500 px-6 py-3 rounded-lg font-bold mt-4">See Review</button>
+  <div id="forecastResult" class="mt-4 text-xl"></div>
+</section>
+
+<!-- SLEEP -->
+<section id="sleepPage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-4">Sleep Analyzer 💤</h2>
+  <input type="time" id="sleepStart" class="p-3 rounded-lg text-black w-48 mb-3">
+  <input type="time" id="sleepEnd" class="p-3 rounded-lg text-black w-48 mb-3">
+  <button id="analyzeSleep" class="bg-purple-600 px-6 py-3 rounded-lg font-bold">Analyze Sleep</button>
+  <div id="sleepResult" class="mt-4 text-cyan-300"></div>
+  <div id="sleepEmoji" class="mt-4 text-4xl"></div>
+<div id="sleepDetails" class="mt-4 text-left bg-black/30 p-4 rounded-xl hidden"></div>
+
+<div id="sleepTips" class="mt-6 text-left bg-white/10 p-4 rounded-xl">
+  <h3 class="font-bold mb-2">🌙 Healthy Sleep Habits</h3>
+  <ul class="list-disc list-inside text-slate-200 text-sm">
+    <li>Avoid caffeine 6 hours before sleep</li>
+    <li>Reduce screen time 1 hour before bed</li>
+    <li>Sleep and wake up at consistent times</li>
+    <li>Keep lights dim in the evening</li>
+    <li>Don’t oversleep to compensate</li>
+  </ul>
+</div>
+
+</section>
+
+<!-- JOURNAL -->
+<section id="journalPage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-4">Gratitude Journal 🌙</h2>
+  <textarea id="dreamInput" class="w-full p-3 rounded-lg text-black mb-4" rows="4" placeholder="Write about your day..."></textarea>
+  <button id="saveDream" class="bg-purple-600 px-6 py-3 rounded-lg font-bold mb-4">Save</button>
+  <div id="dreamOutput" class="text-left bg-black/30 p-4 rounded-xl max-h-64 overflow-y-auto hidden"></div>
+</section>
+<!-- FOCUS GAME -->
+<section id="focusGamePage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-4">Focus & Calm Game 🎯</h2>
+  <p class="text-slate-300 mb-4">Tap only when you see 🎯. Stay calm.</p>
+
+  <div id="focusSymbol" class="text-6xl mb-4">⏳</div>
+  <div id="focusStatus" class="text-cyan-300 mb-4">Press Start</div>
+
+  <button id="startFocusGame" class="bg-red-600 px-6 py-3 rounded-lg font-bold">
+    Start Game
+  </button>
+  <button id="finishFocusGame" class="bg-blue-600 px-6 py-3 rounded-lg font-bold mt-4">
+    Finish Game
+  </button>
+  
+
+  <div class="mt-6 text-slate-200">
+    <p>Focused taps: <span id="focusCorrect">0</span></p>
+    <p>Impulsive taps: <span id="focusWrong">0</span></p>
+  </div>
+</section>
+
+<!-- TASKS -->
+<section id="tasksPage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-4">Daily Plan 📝</h2>
+  <div class="flex gap-3 mb-4">
+    <input id="taskInput" class="flex-1 p-3 rounded-lg text-black" placeholder="Add a new task...">
+    <button id="addTaskBtn" class="bg-purple-600 px-6 py-3 rounded-lg font-bold">Add</button>
+  </div>
+  <ul id="taskList" class="text-left max-w-xl mx-auto list-disc list-inside text-slate-200"></ul>
+</section>
+
+<!-- AI BUDDY -->
+<section id="aibuddyPage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-4">AI Buddy 🤖</h2>
+  <div id="chatBox" class="bg-black/30 p-4 rounded-xl max-h-64 overflow-y-auto mb-3"></div>
+  <input type="text" id="chatInput" placeholder="Type something..." class="w-full p-3 rounded-lg text-black">
+</section>
+
+</div>
+<div id="moodResponse"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+
+<!-- DEPRESSION MODAL -->
+<div id="depressionModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto">
+  <div class="bg-[#0f172a] glass p-8 rounded-2xl max-w-xl w-full relative max-h-[85vh] overflow-y-auto">
+    <button id="closeDepressionModal" class="absolute top-4 right-4 text-white font-bold text-xl">✖</button>
+    <h3 class="text-3xl font-bold mb-6">Depression Self-Check 📝</h3>
+    <div id="depressionQuestion" class="text-left text-lg mb-6 w-full"></div>
+    <div id="depressionOptions" class="flex flex-wrap gap-4 mb-6 justify-center w-full"></div>
+    <div id="depressionResult" class="hidden text-center mt-6 w-full">
+      <div id="resultEmoji" class="text-6xl mb-4"></div>
+      <div id="resultText" class="text-xl mb-4"></div>
+      <div id="resultInsights" class="mt-4 text-left text-slate-200 text-sm leading-relaxed"></div>
+      <div class="w-full bg-white/20 rounded-full h-8 mb-4 overflow-hidden">
+        <div id="resultBar" class="h-8 w-0 rounded-full transition-all duration-500"></div>
+      </div>
+      <canvas id="depressionChart" class="mb-4"></canvas>
+      <div class="flex justify-center gap-4">
+        <button id="doneDepression" class="bg-green-600 px-6 py-3 rounded-lg font-bold">Done</button>
+        <button id="againDepression" class="bg-blue-600 px-6 py-3 rounded-lg font-bold">Take Test Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- DAILY CARE CHECK MODAL -->
+<div id="dailyCheckModal"
+  class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 overflow-y-auto">
+
+  <div class="bg-[#0f172a] glass p-8 rounded-2xl max-w-xl w-full relative max-h-[85vh] overflow-y-auto">
+    <button id="closeDailyCheck"
+      class="absolute top-4 right-4 text-white font-bold text-xl">✖</button>
+
+    <h3 class="text-3xl font-bold mb-6">Daily Care Check 🌿</h3>
+
+    <div id="dailyQuestion" class="text-left text-lg mb-6"></div>
+    <div id="dailyOptions" class="flex flex-col gap-3 mb-6"></div>
+
+    <div id="dailyResult" class="hidden mt-6 text-left"></div>
+  </div>
+</div>
+
+<!-- tsParticles background -->
+<div id="particles-js" class="fixed inset-0 -z-10"></div>
+
+<!-- CURSOR FOLLOWER -->
+<div id="cursorFollower" style="position:fixed;top:0;left:0;width:20px;height:20px;border-radius:50%;pointer-events:none;background:rgba(255,55,255,0.6);mix-blend-mode:screen;transform:translate(-50%,-50%);z-index:9999;"></div>
+
+<script>
+/* --- PAGES --- */
+const pages = ["homePage","moodPage","sleepPage","journalPage","tasksPage","checkupPage","aibuddyPage","focusGamePage"];
+function showPage(pageId){
+  pages.forEach(id => document.getElementById(id)?.classList.add("hidden"));
+  const homeMeditation = document.getElementById("homeMeditation");
+  const newPage = document.getElementById(pageId);
+  if(newPage){ 
+    newPage.classList.remove("hidden");
+    gsap.from(newPage,{opacity:0,y:20,duration:0.6});
+if (pageId === "homePage") {
+  homeMeditation.classList.remove("hidden");
+} else {
+  homeMeditation.classList.add("hidden");
+  stopMeditation(); // 🛑 VERY IMPORTANT
+}
+  }
+}
+document.addEventListener("DOMContentLoaded", ()=>showPage("homePage"));
+
+/* --- MOOD --- */
+const emojis=document.querySelectorAll(".emoji");
+const moodSaved=document.getElementById("moodSaved");
+const log=JSON.parse(localStorage.getItem("moodLog")||"[]");
+const chart=new Chart(document.getElementById("chart"),{
+  type:"line",
+  data:{
+    labels:log.map(m=>m.time),
+    datasets:[{data:log.map(m=>m.value),borderColor:"#00f5ff"}]
+  },
+  options:{plugins:{legend:{display:false}}}
+});
+emojis.forEach(e=>e.onclick=()=>{
+  log.push({value:+e.dataset.value,time:new Date().toLocaleTimeString()});
+  localStorage.setItem("moodLog",JSON.stringify(log));
+  chart.data.labels.push(log.at(-1).time);
+  chart.data.datasets[0].data.push(log.at(-1).value);
+  chart.update();
+  moodSaved.classList.remove("hidden");
+  setTimeout(()=>moodSaved.classList.add("hidden"),1000);
+});
+document.getElementById("forecastMood").onclick=()=>{
+  const moods=JSON.parse(localStorage.getItem("moodLog")||"[]").map(m=>m.value);
+  if(moods.length<2){document.getElementById("forecastResult").textContent="Not enough data 😐";return;}
+  const recent=moods.slice(-3);
+  const avg=recent.reduce((a,b)=>a+b,0)/recent.length;
+  let emoji="🙂", text="Mood seems stable.";
+  if(avg<1){emoji="😢";text="Low mood trend! Take care!";}
+  else if(avg<2.5){emoji="😐";text="Slightly low mood.";}
+  else if(avg<3.5){emoji="😊";text="Mood is positive!";}
+  else{emoji="😁";text="Great mood streak!";}
+  document.getElementById("forecastResult").innerHTML=`${emoji} ${text}`;
+};
+
+/* --- SLEEP --- */
+document.getElementById("analyzeSleep").onclick = () => {
+  const startV = document.getElementById("sleepStart").value;
+  const endV = document.getElementById("sleepEnd").value;
+  const resultEl = document.getElementById("sleepResult");
+  const emojiEl = document.getElementById("sleepEmoji");
+  const detailEl = document.getElementById("sleepDetails");
+
+  if (!startV || !endV) {
+    resultEl.textContent = "Please enter both sleep and wake times.";
+    detailEl.classList.add("hidden");
+    return;
+  }
+
+  let start = new Date(`1970-01-01T${startV}`);
+  let end = new Date(`1970-01-01T${endV}`);
+  if (end <= start) end.setDate(end.getDate() + 1);
+
+  const hours = Math.round(((end - start) / 36e5) * 10) / 10;
+
+  let emoji = "🙂";
+  let headline = "";
+  let feedback = "";
+
+  if (hours < 4) {
+    emoji = "😴💤";
+    headline = "Severely low sleep";
+    feedback = `
+      Your sleep duration is critically low.<br>
+      This can strongly affect mood, memory, and focus.<br><br>
+      <b>Suggestion:</b> Prioritize rest today. Avoid heavy tasks and sleep earlier tonight.
+    `;
+  } else if (hours < 6) {
+    emoji = "😐";
+    headline = "Insufficient sleep";
+    feedback = `
+      You’re running on less rest than your brain needs.<br>
+      Expect reduced concentration and quicker fatigue.<br><br>
+      <b>Suggestion:</b> Try a short nap or an early bedtime.
+    `;
+  } else if (hours <= 8) {
+    emoji = "🙂";
+    headline = "Healthy sleep range";
+    feedback = `
+      Your sleep duration is within a healthy range.<br>
+      This supports emotional balance and learning.<br><br>
+      <b>Suggestion:</b> Maintain this routine consistently.
+    `;
+  } else {
+    emoji = "😁";
+    headline = "Long sleep duration";
+    feedback = `
+      You slept longer than average.<br>
+      This can be restorative—or a sign of fatigue buildup.<br><br>
+      <b>Suggestion:</b> Observe energy levels today and keep timings regular.
+    `;
+  }
+
+  resultEl.innerHTML = `<b>${headline}</b> — ${hours} hours of sleep`;
+  emojiEl.textContent = emoji;
+
+  detailEl.innerHTML = `
+    <p class="mb-2">${feedback}</p>
+    <p class="text-sm text-slate-300">
+      🧠 Sleep affects memory consolidation, emotional regulation, and attention.
+      Even small improvements matter.
+    </p>
+  `;
+  detailEl.classList.remove("hidden");
+};
+
+/* --- JOURNAL --- */
+const dreamInput=document.getElementById("dreamInput");
+const saveDream=document.getElementById("saveDream");
+const dreamOutput=document.getElementById("dreamOutput");
+saveDream.onclick=()=>{
+  const text=dreamInput.value.trim(); if(!text)return;
+  let dreams=JSON.parse(localStorage.getItem("dreams")||"[]");
+  dreams.push({text,time:new Date().toLocaleString()});
+  localStorage.setItem("dreams",JSON.stringify(dreams));
+  dreamInput.value=""; updateDreams();
+};
+function updateDreams(){
+  const dreams=JSON.parse(localStorage.getItem("dreams")||"[]");
+  dreamOutput.innerHTML=dreams.map(d=>`<div class="mb-2">📝 <strong>${d.time}:</strong> ${d.text}</div>`).join("");
+  if(dreams.length>0) dreamOutput.classList.remove("hidden");
+}
+updateDreams();
+
+/* --- TASKS --- */
+const taskInput=document.getElementById("taskInput");
+const addTaskBtn=document.getElementById("addTaskBtn");
+const taskList=document.getElementById("taskList");
+let tasks=JSON.parse(localStorage.getItem("dailyTasks")||"[]");
+function renderTasks(){taskList.innerHTML="";tasks.forEach((t,i)=>{
+  const li=document.createElement("li");
+  li.textContent=t;
+  li.classList.add("cursor-pointer","hover:text-purple-400");
+  li.onclick=()=>{tasks.splice(i,1);localStorage.setItem("dailyTasks",JSON.stringify(tasks));renderTasks();}
+  taskList.appendChild(li);
+})}
+addTaskBtn.onclick=()=>{const t=taskInput.value.trim();if(!t)return;tasks.push(t);localStorage.setItem("dailyTasks",JSON.stringify(tasks));taskInput.value="";renderTasks();}
+renderTasks();
+
+/* --- AI BUDDY --- */
+const chatBox = document.getElementById("chatBox");
+const chatInput = document.getElementById("chatInput");
+
+/* ---------------- KEYWORDS ---------------- */
+
+const keywords = {
+  greet: ["hi","hello","hey","namaste","yo"],
+  sad: ["sad","cry","lonely","down","empty","hopeless"],
+  stress: ["stress","anxious","panic","overthinking","pressure"],
+  tired: ["tired","sleepy","burnout","fatigue"],
+  happy: ["happy","good","great","awesome"],
+  school: ["school","exam","study","homework","project"]
+};
+
+/* ---------------- STATE MEMORY ---------------- */
+
+let lastMood = null;
+
+/* ---------------- RESPONSE BANK (LAYERED) ---------------- */
+
+const responses = {
+
+  greet: [
+`Hey 🙂 I’m here with you.
+
+You don’t need to impress or explain anything perfectly here.
+This is just a space to talk and breathe a little.`
+  ],
+
+  sad: [
+`It sounds like you’re feeling low, and that matters.
+
+Sadness often shows up when we’ve been holding things in for too long — stress, expectations, or quiet disappointments.
+
+A small thing that can help right now is slowing your breathing or doing something gently comforting, like music or just sitting still.
+
+You’re not weak for feeling this way. You’re human, and this moment doesn’t define you.`
+  ],
+
+  stress: [
+`Feeling stressed or anxious can make everything feel louder and heavier.
+
+When thoughts start racing, grounding helps more than forcing solutions — relaxing your shoulders, unclenching your jaw, breathing slowly.
+
+You don’t need to solve everything today. Focus on what’s right in front of you, one step at a time.`
+  ],
+
+  tired: [
+`Feeling tired or burnt out is your mind asking for care, not criticism.
+
+Even short rest — a pause, a stretch, closing your eyes — can help reset your energy a bit.
+
+You’re allowed to slow down. Rest is part of progress, not a failure.`
+  ],
+
+  happy: [
+`That’s really nice to hear 😊
+
+Moments like this matter more than we realize — they help balance the tougher days.
+
+Try to sit with this feeling for a moment. You earned it.`
+  ],
+
+  school: [
+`School pressure can feel overwhelming, especially when expectations pile up.
+
+Breaking work into smaller pieces usually helps more than pushing harder or panicking.
+
+You’re not behind — you’re learning how to handle responsibility, and that takes time.`
+  ],
+
+  fallback: [
+`I’m here with you.
+
+You don’t need perfect words — just say whatever feels closest to what’s going on inside.`
+  ]
+};
+
+/* ---------------- HELPERS ---------------- */
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/* ---------------- MAIN LOGIC ---------------- */
+
+function sendMessage() {
+  const text = chatInput.value.trim().toLowerCase();
+  if (!text) return;
+
+  chatBox.innerHTML += `<div class="text-right text-cyan-300 mb-2">${chatInput.value}</div>`;
+  chatInput.value = "";
+
+  let reply = pick(responses.fallback);
+
+  if (keywords.greet.some(k => text.includes(k))) {
+    reply = pick(responses.greet);
+    lastMood = "neutral";
+
+  } else if (keywords.sad.some(k => text.includes(k))) {
+    reply = pick(responses.sad);
+    lastMood = "sad";
+
+  } else if (keywords.stress.some(k => text.includes(k))) {
+    reply = pick(responses.stress);
+    lastMood = "stress";
+
+  } else if (keywords.tired.some(k => text.includes(k))) {
+    reply = pick(responses.tired);
+    lastMood = "tired";
+
+  } else if (keywords.happy.some(k => text.includes(k))) {
+    reply = pick(responses.happy);
+    lastMood = "happy";
+
+  } else if (keywords.school.some(k => text.includes(k))) {
+    reply = pick(responses.school);
+    lastMood = "school";
+  }
+
+  setTimeout(() => {
+    chatBox.innerHTML += `
+      <div class="text-left text-white whitespace-pre-line mb-4">
+        ${reply}
+      </div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 400);
+}
+
+/* ---------------- ENTER KEY SUPPORT ---------------- */
+
+chatInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+
+/* --- CURSOR --- */
+const cursor=document.getElementById("cursorFollower");
+document.addEventListener("mousemove",e=>{gsap.to(cursor,{x:e.clientX,y:e.clientY,duration:0.2,ease:"power3.out"})});
+
+/* --- tsParticles --- */
+window.addEventListener("DOMContentLoaded", () => {
+  tsParticles.load("particles-js", {
+    fpsLimit: 60,
+    particles: {
+      number: { value: 80 },
+      color: { value: "#ff55ff" },
+      shape: { type: "circle" },
+      opacity: { value: 0.3 },
+      size: { value: { min:1,max:4 } },
+      move: { enable:true, speed:0.8, random:true, straight:false, outModes:"out" },
+      links: { enable:true, distance:120, color:"#ff55ff", opacity:0.2, width:1 }
+    },
+    interactivity: { events:{ onHover:{enable:true,mode:"repulse"} }, modes:{ repulse:{distance:100} } },
+    detectRetina:true
+  });
+});
+
+/* --- DEPRESSION TEST --- */
+const depressionTestQuestions = [
+  { id: 'q1', text: "How often have you felt down, depressed, or hopeless?" },
+  { id: 'q2', text: "How often have you had little interest or pleasure in doing things?" },
+  { id: 'q3', text: "How often have you felt tired or had little energy?" },
+  { id: 'q4', text: "How often have you had trouble falling or staying asleep, or sleeping too much?" },
+  { id: 'q5', text: "How often have you felt that you were better off dead, or hurt in some way?" }
+];
+const optionValues = [
+  { text: "Never", value: 0 },
+  { text: "Sometimes", value: 1 },
+  { text: "Often", value: 2 },
+  { text: "Always", value: 3 }
+];
+const launchBtn=document.getElementById("launchDepression");
+const depressionModal=document.getElementById("depressionModal");
+const questionDiv=document.getElementById("depressionQuestion");
+const optionsDiv=document.getElementById("depressionOptions");
+const resultDiv=document.getElementById("depressionResult");
+const resultBar=document.getElementById("resultBar");
+const resultEmoji=document.getElementById("resultEmoji");
+const resultText=document.getElementById("resultText");
+const doneBtn=document.getElementById("doneDepression");
+const againBtn=document.getElementById("againDepression");
+const closeModalBtn=document.getElementById("closeDepressionModal");
+let currentQ=0, scores=[], depressionChart;
+
+function loadQuestion(){
+  const q=depressionTestQuestions[currentQ];
+  questionDiv.style.display="block"; optionsDiv.style.display="flex"; optionsDiv.style.flexWrap="wrap"; optionsDiv.style.gap="1rem";
+  questionDiv.textContent=q.text; optionsDiv.innerHTML="";
+  optionValues.forEach(o=>{
+    const btn=document.createElement("button");
+    btn.textContent=o.text;
+    btn.className="bg-purple-600 px-4 py-2 rounded-lg text-white hover:bg-purple-500";
+    btn.onclick=()=>{
+      scores.push(o.value);
+      if(currentQ<depressionTestQuestions.length-1){currentQ++; loadQuestion();}
+      else{showResult();}
+    };
+    optionsDiv.appendChild(btn);
+  });
+}
+function showResult(){
+  questionDiv.style.display="none";
+  optionsDiv.style.display="none";
+
+  const totalScore = scores.reduce((a,b)=>a+b,0);
+  const maxScore = depressionTestQuestions.length * 3;
+  const percent = Math.round((totalScore / maxScore) * 100);
+
+  let emoji = "🙂";
+  let headline = "";
+  let shortText = "";
+  let insights = "";
+
+  if(percent < 25){
+    emoji = "😊";
+    headline = "Emotionally stable range";
+    shortText = "Your responses suggest you’re coping fairly well right now.";
+
+    insights = `
+      <b>What this means:</b><br>
+      Your emotional balance looks healthy overall. You may still have off days, but they don’t appear overwhelming.<br><br>
+
+      <b>Helpful focus:</b>
+      <ul class="list-disc list-inside">
+        <li>Maintain routines that support your mood</li>
+        <li>Stay socially connected</li>
+        <li>Notice what already works for you</li>
+      </ul>
+
+      <b>Reminder:</b><br>
+      Mental health isn’t about being happy all the time—it’s about resilience.
+    `;
+  }
+
+  else if(percent < 50){
+    emoji = "😐";
+    headline = "Mild emotional strain";
+    shortText = "Some signs of low mood or fatigue are present.";
+
+    insights = `
+      <b>What this means:</b><br>
+      You may be experiencing stress, tiredness, or emotional overload, even if it’s subtle.<br><br>
+
+      <b>Possible contributors:</b>
+      <ul class="list-disc list-inside">
+        <li>Irregular sleep</li>
+        <li>Academic or social pressure</li>
+        <li>Not enough downtime</li>
+      </ul>
+
+      <b>Helpful steps:</b>
+      <ul class="list-disc list-inside">
+        <li>Improve sleep consistency</li>
+        <li>Take short mental breaks</li>
+        <li>Express thoughts through writing or talking</li>
+      </ul>
+    `;
+  }
+
+  else if(percent < 75){
+    emoji = "😟";
+    headline = "Moderate depressive signs";
+    shortText = "Your responses suggest ongoing emotional difficulty.";
+
+    insights = `
+      <b>What this means:</b><br>
+      You may be feeling drained, unmotivated, or emotionally heavy more often than usual.<br><br>
+
+      <b>This does NOT mean:</b><br>
+      You are weak, broken, or failing. These feelings are signals, not judgments.<br><br>
+
+      <b>What can help:</b>
+      <ul class="list-disc list-inside">
+        <li>Daily structure (even small routines)</li>
+        <li>Gentle physical movement</li>
+        <li>Talking to someone you trust</li>
+        <li>Limiting isolation</li>
+      </ul>
+
+      <b>Important:</b><br>
+      If these feelings last weeks or worsen, reaching out for extra support is a strong step.
+    `;
+  }
+
+  else{
+    emoji = "😔";
+    headline = "High emotional distress";
+    shortText = "Your responses indicate significant emotional strain.";
+
+    insights = `
+      <b>What this means:</b><br>
+      You may be carrying a heavy emotional load right now. This deserves care and attention.<br><br>
+
+      <b>You are not alone:</b><br>
+      Many people experience this phase, and support genuinely helps.<br><br>
+
+      <b>Strongly recommended steps:</b>
+      <ul class="list-disc list-inside">
+        <li>Talk to a trusted adult, teacher, or guardian</li>
+        <li>Share honestly how you’ve been feeling</li>
+        <li>Prioritize rest and emotional safety</li>
+      </ul>
+
+      <b>Reminder:</b><br>
+      Asking for help is not failure—it’s self-respect.
+    `;
+  }
+
+  resultEmoji.textContent = emoji;
+  resultText.innerHTML = `<b>${headline}</b><br>${shortText}`;
+  document.getElementById("resultInsights").innerHTML = insights;
+  resultDiv.classList.remove("hidden");
+
+  // Progress bar animation
+  resultBar.style.width="0%";
+  let width = 0;
+  const interval = setInterval(()=>{
+    if(width >= percent) clearInterval(interval);
+    else{
+      width++;
+      resultBar.style.width = width + "%";
+      resultBar.style.backgroundColor =
+        width < 50 ? "#22c55e" :
+        width < 75 ? "#facc15" :
+        "#ef4444";
+    }
+  }, 12);
+
+  // Chart
+  if(depressionChart) depressionChart.destroy();
+  const ctx=document.getElementById("depressionChart").getContext("2d");
+  depressionChart=new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:depressionTestQuestions.map((_,i)=>`Q${i+1}`),
+      datasets:[{data:scores,backgroundColor:"#ff55ff"}]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true,max:3}}
+    }
+  });
+saveCheckupScore("depression", totalScore);
+}
+
+function resetTest(){questionDiv.style.display="block"; optionsDiv.style.display="flex"; scores=[]; currentQ=0;}
+
+if(launchBtn) launchBtn.onclick=()=>{depressionModal.classList.remove("hidden"); loadQuestion();}
+if(closeModalBtn) closeModalBtn.onclick=()=>{depressionModal.classList.add("hidden"); resetTest();}
+if(doneBtn) doneBtn.onclick=()=>{depressionModal.classList.add("hidden"); resetTest();}
+if(againBtn) againBtn.onclick=()=>{resultDiv.classList.add("hidden"); scores=[]; currentQ=0; loadQuestion();}
+
+/* --- DEPRESSION ENTER SUPPORT --- */
+document.addEventListener("keydown",(e)=>{
+  if(!depressionModal.classList.contains("hidden") && e.key==="Enter"){
+    const firstBtn=optionsDiv.querySelector("button");
+    if(firstBtn) firstBtn.click();
+  }
+});
+
+let focusInterval = null;
+let focusCorrect = 0;
+let focusWrong = 0;
+let focusActive = false;
+
+let symbols = ["⬤","▲","■","★","⬟","⬢"];
+let targetSymbol = "🎯";
+
+const focusSymbolEl = document.getElementById("focusSymbol");
+const focusStatusEl = document.getElementById("focusStatus");
+const correctEl = document.getElementById("focusCorrect");
+const wrongEl = document.getElementById("focusWrong");
+const startBtn = document.getElementById("startFocusGame");
+const finishBtn = document.getElementById("finishFocusGame");
+
+let symbolCount = 0;
+let currentInterval = 1200; // start interval in ms
+
+function startFocusGame(){
+  clearInterval(focusInterval);
+  focusCorrect = 0;
+  focusWrong = 0;
+  correctEl.textContent = "0";
+  wrongEl.textContent = "0";
+  focusActive = true;
+  focusStatusEl.textContent = "Observe calmly…";
+  symbolCount = 0;
+  currentInterval = 1200;
+
+  focusInterval = setInterval(showNextSymbol, currentInterval);
+}
+
+function showNextSymbol(){
+  if(!focusActive) return;
+
+  // Decide symbol
+  const isTarget = Math.random() < 0.25;
+  focusSymbolEl.textContent = isTarget ? targetSymbol : symbols[Math.floor(Math.random()*symbols.length)];
+  focusSymbolEl.dataset.target = isTarget ? "yes" : "no";
+
+  symbolCount++;
+
+  // Gradually increase speed every 5 symbols
+  if(symbolCount % 5 === 0 && currentInterval > 600){
+    currentInterval -= 100; // decrease interval by 100ms
+    clearInterval(focusInterval);
+    focusInterval = setInterval(showNextSymbol, currentInterval);
+  }
+
+  // Auto finish after 60 symbols
+  if(symbolCount >= 60){
+    finishFocusGame();
+    symbolCount = 0;
+  }
+}
+
+// Click logic
+focusSymbolEl.onclick = () => {
+  if(!focusActive) return;
+
+  focusSymbolEl.classList.remove("focus-correct", "focus-wrong");
+
+  if(focusSymbolEl.dataset.target === "yes"){
+    focusCorrect++;
+    focusStatusEl.textContent = "Good control 👍";
+    focusSymbolEl.classList.add("focus-correct");
+  } else {
+    focusWrong++;
+    focusStatusEl.textContent = "Slow down 🌊";
+    focusSymbolEl.classList.add("focus-wrong");
+  }
+
+  correctEl.textContent = focusCorrect;
+  wrongEl.textContent = focusWrong;
+
+  // Remove effect after animation
+  setTimeout(() => {
+    focusSymbolEl.classList.remove("focus-correct", "focus-wrong");
+  }, 300);
+};
+
+// Finish game & AI-style analysis
+function finishFocusGame(){
+  if(!focusActive) return;
+  focusActive = false;
+  clearInterval(focusInterval);
+
+  const totalClicks = focusCorrect + focusWrong;
+  const accuracy = totalClicks ? Math.round((focusCorrect / totalClicks) * 100) : 0;
+  let insight = "";
+
+  if(accuracy > 80){
+    insight = "Excellent focus! You maintained calm attention and strong impulse control.";
+  } else if(accuracy > 60){
+    insight = "Good job! Your focus is solid, though there’s room to calm impulses.";
+  } else if(accuracy > 40){
+    insight = "You’re improving, but try pausing before each tap to strengthen attention.";
+  } else{
+    insight = "Focus needs work. Remember: observe calmly before acting.";
+  }
+
+  focusStatusEl.innerHTML = `
+    <p>Focused taps: ${focusCorrect}</p>
+    <p>Impulsive taps: ${focusWrong}</p>
+    <p>Accuracy: ${accuracy}%</p>
+    <p>🧠 Insight: ${insight}</p>
+    <p>🎯 Purpose: This game trains your ability to pause, observe, and act only when necessary, improving selective attention and self-control.</p>
+  `;
+}
+
+// Attach buttons
+startBtn.onclick = startFocusGame;
+finishBtn.onclick = finishFocusGame;
+
+let meditationTimer = null;
+let meditationInterval = null;
+
+const meditationTextEl = document.getElementById("meditationText");
+const meditationStatusEl = document.getElementById("meditationStatus");
+const breathingCircle = document.getElementById("breathingCircle");
+
+function startMeditation(minutes){
+  stopMeditation(); // reset safely
+
+  meditationTextEl.textContent = "Inhale…";
+  meditationStatusEl.textContent = "Meditation started 🌊";
+
+  breathingCircle.style.animation = "breatheInOut 6s ease-in-out infinite";
+
+  let inhale = true;
+
+  meditationInterval = setInterval(() => {
+    meditationTextEl.textContent = inhale ? "Exhale…" : "Inhale…";
+    inhale = !inhale;
+  }, 3000);
+
+  meditationTimer = setTimeout(() => {
+    stopMeditation();
+    meditationStatusEl.textContent = "Session complete 🧠✨ Take this calm with you.";
+  }, minutes * 60000);
+}
+
+function stopMeditation(){
+  clearTimeout(meditationTimer);
+  clearInterval(meditationInterval);
+
+  breathingCircle.style.animation = "none";
+  meditationTextEl.textContent = "Breathe with the circle";
+}
+const moodResponseEl = document.getElementById("moodResponse");
+
+function analyzeMood(mood){
+  let response = "";
+
+  if(mood === "happy" || mood === "good"){
+    response = `
+      🌟 <b>You’re in a good space today.</b><br>
+      Protect this mood. Do something meaningful, help someone, or create.<br>
+      Motivation grows when you respect good days.
+    `;
+  }
+  else if(mood === "neutral" || mood === "okay"){
+    response = `
+      🌤️ <b>You seem balanced.</b><br>
+      Not every day needs intensity. Staying grounded is strength.<br>
+      A short breathing session could sharpen your clarity.
+    `;
+  }
+  else if(mood === "sad" || mood === "low"){
+    response = `
+      🌧️ <b>You seem low today.</b><br>
+      That’s okay. You’re not broken — you’re human.<br>
+      Slow down. Breathe. A short meditation may help calm the noise.
+    `;
+  }
+  else{
+    response = `
+      🌊 <b>Thanks for checking in with yourself.</b><br>
+      Awareness is the first step toward balance.
+    `;
+  }
+
+  moodResponseEl.innerHTML = response;
+}
+document.addEventListener("DOMContentLoaded", () => {
+
+  const bgMusic = document.getElementById("bgMusic");
+  const musicToggle = document.getElementById("musicToggle");
+
+  if (!bgMusic || !musicToggle) return; // safety guard
+
+  let musicOn = false;
+
+  musicToggle.addEventListener("click", () => {
+    if (!musicOn) {
+      bgMusic.volume = 0.25;
+      bgMusic.play();
+      musicToggle.textContent = "🎵 Music On";
+      musicOn = true;
+    } else {
+      bgMusic.pause();
+      musicToggle.textContent = "🎵 Music Off";
+      musicOn = false;
+    }
+  });
+
+});
+
+/* ================= DAILY CARE CHECK ================= */
+
+const dailyQuestions = [
+  {
+    text: "Did you consciously drink water multiple times today?",
+    options: [
+      { text: "Yes, several times", points: 2 },
+      { text: "A little", points: 1 },
+      { text: "Didn’t notice", points: 0 }
+    ]
+  },
+  {
+    text: "Did you move your body today? (walk, stretch, exercise)",
+    options: [
+      { text: "Yes", points: 2 },
+      { text: "A little", points: 1 },
+      { text: "Didn’t notice", points: 0 }
+    ]
+  },
+  {
+    text: "Did you sleep properly last night?",
+    options: [
+      { text: "Yes", points: 2 },
+      { text: "Not really", points: 1 },
+      { text: "Didn’t notice", points: 0 }
+    ]
+  },
+  {
+    text: "When was the last time you went outside or saw the sky?",
+    options: [
+      { text: "Today", points: 3 },
+      { text: "Often (3–4 days/week)", points: 2 },
+      { text: "Sometimes (1–2 days/week)", points: 1 },
+      { text: "Rarely / almost never", points: 0 }
+    ]
+  },
+  {
+    text: "Did you eat proper meals today?",
+    options: [
+      { text: "Yes", points: 2 },
+      { text: "Somewhat", points: 1 },
+      { text: "Didn’t notice", points: 0 }
+    ]
+  },
+  {
+    text: "How much time did you spend on social media today?",
+    options: [
+      { text: "Less than 2 hours", points: 3 },
+      { text: "2–4 hours", points: 2 },
+      { text: "4–6 hours", points: 1 },
+      { text: "More than 6 hours", points: 0 }
+    ]
+  }
+];
+
+let dailyIndex = 0;
+let dailyScore = [];
+
+const dailyModal = document.getElementById("dailyCheckModal");
+const dailyQ = document.getElementById("dailyQuestion");
+const dailyOpt = document.getElementById("dailyOptions");
+const dailyRes = document.getElementById("dailyResult");
+
+document.getElementById("launchDailyCheck").onclick = () => {
+  dailyModal.classList.remove("hidden");
+  dailyIndex = 0;
+  dailyScore = [];
+  dailyRes.classList.add("hidden");
+  loadDailyQuestion();
+};
+
+document.getElementById("closeDailyCheck").onclick = () => {
+  dailyModal.classList.add("hidden");
+};
+
+function loadDailyQuestion() {
+  const q = dailyQuestions[dailyIndex];
+  dailyQ.textContent = q.text;
+  dailyOpt.innerHTML = "";
+
+  q.options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.textContent = opt.text;
+    btn.className = "bg-cyan-600 px-4 py-2 rounded-lg hover:bg-cyan-500";
+    btn.onclick = () => {
+      dailyScore.push(opt.points);
+      if (dailyIndex < dailyQuestions.length - 1) {
+        dailyIndex++;
+        loadDailyQuestion();
+      } else {
+        showDailyResult();
+      }
+    };
+    dailyOpt.appendChild(btn);
+  });
+}
+
+function showDailyResult() {
+  dailyQ.textContent = "";
+  dailyOpt.innerHTML = "";
+
+  const total = dailyScore.reduce((a,b)=>a+b,0);
+  let insight = "";
+
+  if (total >= 12) {
+    insight = `
+    🌟 <b>Very Healthy State</b><br><br>
+    You’re taking good care of yourself. Maintain these habits.<br><br>
+    • Keep sleep & meals consistent<br>
+    • Add one joyful activity today<br>
+    • Protect this balance
+    `;
+  } else if (total >= 8) {
+    insight = `
+    🌤️ <b>Mostly Okay</b><br><br>
+    You’re doing alright, but small improvements will help.<br><br>
+    • Improve sleep by 30 minutes<br>
+    • Go outside briefly today<br>
+    • Reduce screen time slightly
+    `;
+  } else if (total >= 4) {
+    insight = `
+    🌥️ <b>Mentally Tired</b><br><br>
+    Your body and mind need care, not pressure.<br><br>
+    • Focus on food, water, sleep<br>
+    • Gentle movement helps<br>
+    • Talk to someone you trust
+    `;
+  } else {
+    insight = `
+    🌧️ <b>Needs Immediate Care</b><br><br>
+    You’re running very low on energy.<br><br>
+    • Rest without guilt<br>
+    • Do only essentials today<br>
+    • Reduce phone use<br>
+    • Small steps matter
+    `;
+  }
+
+  dailyRes.innerHTML = insight;
+  dailyRes.classList.remove("hidden");
+saveCheckupScore("daily", total);
+}
+/* ================= CHECKUP PROGRESS GRAPH ================= */
+
+function saveCheckupScore(type, score) {
+  const data = JSON.parse(localStorage.getItem("checkupData")) || {
+    depression: [],
+    daily: []
+  };
+
+  data[type].push(score);
+  localStorage.setItem("checkupData", JSON.stringify(data));
+
+  renderCheckupGraph();
+}
+
+let checkupChart = null;
+
+function renderCheckupGraph() {
+  const canvas = document.getElementById("checkupGraph");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  const data = JSON.parse(localStorage.getItem("checkupData")) || {
+    depression: [],
+    daily: []
+  };
+
+  const maxLen = Math.max(data.depression.length, data.daily.length);
+  const labels = Array.from({ length: maxLen }, (_, i) => `Attempt ${i + 1}`);
+
+  if (checkupChart) checkupChart.destroy();
+
+  checkupChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Depression Test",
+          data: data.depression,
+          tension: 0.4,
+          borderWidth: 2
+        },
+        {
+          label: "Daily Care Check",
+          data: data.daily,
+          tension: 0.4,
+          borderWidth: 2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: "white" } }
+      },
+      scales: {
+        x: {
+          ticks: { color: "white" },
+          grid: { color: "rgba(255,255,255,0.1)" }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: "white" },
+          grid: { color: "rgba(255,255,255,0.1)" }
+        }
+      }
+    }
+  });
+}
+
+/* Re-render graph when opening Check-Up page */
+const originalShowPage = showPage;
+showPage = function(pageId){
+  originalShowPage(pageId);
+  if(pageId === "checkupPage"){
+    renderCheckupGraph();
+  }
+};
+
+</script>
+
+<!-- Background Music -->
+<audio id="bgMusic" loop>
+  <source src="assets/music.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Music Toggle Button -->
+<button id="musicToggle" class="music-btn">
+  🎵 Music Off
+</button>
+
+</body>
+</html>
