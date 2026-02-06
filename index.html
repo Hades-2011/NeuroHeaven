@@ -1424,20 +1424,38 @@ document.addEventListener("mousemove", e => {
   mouseY = e.clientY;
 });
 
+/* ================= FIXED EYE FOLLOW ENGINE ================= */
+
+const eyesContainer = document.getElementById("neurobot-eyes");
+
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let idlePhase = 0;
+
+document.addEventListener("mousemove", e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
 function animateNeuroEyes() {
-  const rect = neurobotBody.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height * 0.38;
+  if (!eyesContainer) return;
 
-  let dx = (mouseX - cx) / 85;
-  let dy = (mouseY - cy) / 85;
+  const rect = eyesContainer.getBoundingClientRect();
 
+  const eyeCenterX = rect.left + rect.width / 2;
+  const eyeCenterY = rect.top + rect.height / 2;
+
+  let dx = (mouseX - eyeCenterX) / 20;
+  let dy = (mouseY - eyeCenterY) / 20;
+
+  // Clamp movement so it stays inside face
   dx = Math.max(-6, Math.min(6, dx));
-  dy = Math.max(-6, Math.min(6, dy));
+  dy = Math.max(-5, Math.min(5, dy));
 
-  idleT += 0.02;
-  const idleY = Math.sin(idleT) * 1.6;
-  const idleX = Math.cos(idleT * 0.6) * 0.8;
+  // Idle motion (subtle breathing / life)
+  idlePhase += 0.03;
+  const idleX = Math.sin(idlePhase * 0.7) * 0.6;
+  const idleY = Math.cos(idlePhase) * 1.2;
 
   eyes.forEach(eye => {
     eye.style.transform = `translate(${dx + idleX}px, ${dy + idleY}px)`;
@@ -1446,7 +1464,8 @@ function animateNeuroEyes() {
   requestAnimationFrame(animateNeuroEyes);
 }
 
-animateNeuroEyes();
+requestAnimationFrame(animateNeuroEyes);
+
 </script>
 
 <!-- Background Music -->
@@ -1461,6 +1480,7 @@ animateNeuroEyes();
 
 </body>
 </html>
+
 
 
 
