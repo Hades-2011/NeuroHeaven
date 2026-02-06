@@ -96,6 +96,84 @@ textarea,input{outline:none;}
 .music-btn:hover{
   background: rgba(255,255,255,0.25);
 }
+/* ================= NEUROBOT CORE ================= */
+
+#neurobot-assistant {
+  position: fixed;
+  bottom: 20px;
+  right: 15px;
+  z-index: 999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#neurobot-assistant img {
+  width: 340px;
+  animation: floatEase 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 26px rgba(34,211,238,0.45));
+}
+
+@keyframes floatEase {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-18px); }
+  100% { transform: translateY(0); }
+}
+
+/* --- Face anchor --- */
+#neurobot-body {
+  position: relative;
+  width: fit-content;
+}
+
+/* --- Eyes --- */
+#neurobot-eyes {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  width: 54px;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.neuro-eye {
+  width: 12px;
+  height: 12px;
+  background: #22d3ee;
+  border-radius: 50%;
+  animation: blink 6.5s infinite;
+}
+
+@keyframes blink {
+  0%, 94%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+
+/* --- Bubble --- */
+#neurobot-bubble {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.75);
+  color: #e5e7eb;
+  border-radius: 10px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#neurobot-assistant.show-bubble #neurobot-bubble {
+  opacity: 1;
+}
+
+/* --- Mobile safety --- */
+@media (max-width: 768px) {
+  #neurobot-assistant img {
+    width: 220px;
+  }
+}
 
 </style>
 </head>
@@ -116,7 +194,19 @@ textarea,input{outline:none;}
     <button onclick="showPage('aibuddyPage')">🤖AI Buddy</button>
   </nav>
 </header>
+<!-- ================= NEUROBOT ASSISTANT ================= -->
+<div id="neurobot-assistant">
+  <div id="neurobot-body">
+    <img src="assets/neurobot.png" alt="NeuroBot" />
 
+    <div id="neurobot-eyes">
+      <div class="neuro-eye"></div>
+      <div class="neuro-eye"></div>
+    </div>
+  </div>
+
+  <div id="neurobot-bubble"></div>
+</div>
 <div class="px-6 py-10">
 
 <!-- HOME -->
@@ -1255,7 +1345,108 @@ showPage = function(pageId){
     renderCheckupGraph();
   }
 };
+/* ================= NEUROBOT FULL SYSTEM ================= */
 
+/* --- Config --- */
+const NeuroBotConfig = {
+  enabled: true,
+  muted: false,
+  idleTimeout: 60000,
+  personality: "calm" // calm | playful | serious
+};
+
+/* --- Elements --- */
+const neurobotAssistant = document.getElementById("neurobot-assistant");
+const neurobotBubbleEl = document.getElementById("neurobot-bubble");
+const neurobotBody = document.getElementById("neurobot-body");
+const eyes = document.querySelectorAll(".neuro-eye");
+
+/* --- State --- */
+const NeuroBotState = {
+  lastPage: null,
+  idleTimer: null
+};
+
+/* --- Messages --- */
+const assistantMessages = {
+  homePage: "Welcome back 🧠✨",
+  moodPage: "Your feelings matter.",
+  breathePage: "Slow breaths help more than you think.",
+  sleepPage: "Rest is productive too.",
+  journalPage: "Writing untangles thoughts.",
+  focusGamePage: "Stay present.",
+  tasksPage: "One step at a time.",
+  checkupPage: "Tracking yourself is powerful.",
+  aibuddyPage: "I’m here."
+};
+
+/* --- Helpers --- */
+function personalityWrap(text) {
+  if (NeuroBotConfig.personality === "playful") return "😄 " + text;
+  if (NeuroBotConfig.personality === "serious") return text.replace(/[✨😄]/g,"");
+  return text;
+}
+
+function speakNeurobot(pageId) {
+  if (!NeuroBotConfig.enabled) return;
+  if (NeuroBotState.lastPage === pageId) return;
+
+  const msg = assistantMessages[pageId];
+  if (!msg) return;
+
+  neurobotBubbleEl.textContent = personalityWrap(msg);
+  neurobotAssistant.classList.add("show-bubble");
+  NeuroBotState.lastPage = pageId;
+
+  clearTimeout(NeuroBotState.idleTimer);
+  NeuroBotState.idleTimer = setTimeout(() => {
+    neurobotAssistant.classList.remove("show-bubble");
+  }, 3500);
+}
+
+/* --- Hook showPage ONCE --- */
+(function () {
+  const baseShowPage = showPage;
+  window.showPage = function(pageId) {
+    baseShowPage(pageId);
+    speakNeurobot(pageId);
+  };
+})();
+
+/* ================= EYE ENGINE ================= */
+
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let idleT = 0;
+
+document.addEventListener("mousemove", e => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+function animateNeuroEyes() {
+  const rect = neurobotBody.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height * 0.38;
+
+  let dx = (mouseX - cx) / 85;
+  let dy = (mouseY - cy) / 85;
+
+  dx = Math.max(-6, Math.min(6, dx));
+  dy = Math.max(-6, Math.min(6, dy));
+
+  idleT += 0.02;
+  const idleY = Math.sin(idleT) * 1.6;
+  const idleX = Math.cos(idleT * 0.6) * 0.8;
+
+  eyes.forEach(eye => {
+    eye.style.transform = `translate(${dx + idleX}px, ${dy + idleY}px)`;
+  });
+
+  requestAnimationFrame(animateNeuroEyes);
+}
+
+animateNeuroEyes();
 </script>
 
 <!-- Background Music -->
@@ -1270,6 +1461,7 @@ showPage = function(pageId){
 
 </body>
 </html>
+
 
 
 
