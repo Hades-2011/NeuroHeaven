@@ -107,6 +107,7 @@ textarea,input{outline:none;}
   <nav class="flex gap-4 text-sm md:text-base">
     <button onclick="showPage('homePage')">🏡Home</button>
     <button onclick="showPage('moodPage')">😉Mood</button>
+    <button onclick="showPage('breathePage')">🧘‍♂️Meditation</button>
     <button onclick="showPage('sleepPage')">😴Sleep</button>
     <button onclick="showPage('journalPage')">📕Journal</button>
     <button onclick="showPage('focusGamePage')">🎯Focus Game</button>
@@ -303,7 +304,7 @@ textarea,input{outline:none;}
 
 <script>
 /* --- PAGES --- */
-const pages = ["homePage","moodPage","sleepPage","journalPage","tasksPage","checkupPage","aibuddyPage","focusGamePage"];
+const pages = ["homePage","moodPage","breathePage","sleepPage","journalPage","tasksPage","checkupPage","aibuddyPage","focusGamePage"];
 function showPage(pageId){
   pages.forEach(id => document.getElementById(id)?.classList.add("hidden"));
   const homeMeditation = document.getElementById("homeMeditation");
@@ -1269,4 +1270,5 @@ showPage = function(pageId){
 
 </body>
 </html>
+
 
