@@ -107,6 +107,7 @@ textarea,input{outline:none;}
   <nav class="flex gap-4 text-sm md:text-base">
     <button onclick="showPage('homePage')">🏡Home</button>
     <button onclick="showPage('moodPage')">😉Mood</button>
+    <button onclick="showPage('breathePage')">🧘‍♀️Meditate</button>
     <button onclick="showPage('sleepPage')">😴Sleep</button>
     <button onclick="showPage('journalPage')">📕Journal</button>
     <button onclick="showPage('focusGamePage')">🎯Focus Game</button>
@@ -146,23 +147,23 @@ textarea,input{outline:none;}
 </section>
 
 <!-- Home-only Meditation Wrapper -->
-<section id="homeMeditation" class="hidden">
+<!-- BREATHE PAGE -->
+<section id="breathePage" class="hidden p-6 glass max-w-2xl mx-auto text-center">
+  <h2 class="text-3xl font-bold mb-6">Breathe & Meditate 🧘</h2>
 
-  <section id="meditationSection">
-    <h2>🧘 Meditation</h2>
-    <p id="meditationText">Breathe with the circle</p>
+  <p id="meditationText">Breathe with the circle</p>
 
-    <div id="breathingCircle"></div>
+  <div id="breathingCircle"></div>
 
-    <div style="margin-top: 15px;">
-      <button onclick="startMeditation(1)">1 min</button>
-      <button onclick="startMeditation(3)">3 min</button>
-      <button onclick="startMeditation(5)">5 min</button>
-      <button onclick="stopMeditation()">Stop</button>
-    </div>
+  <div style="margin-top: 15px;">
+    <button onclick="startMeditation(1)">1 min</button>
+    <button onclick="startMeditation(3)">3 min</button>
+    <button onclick="startMeditation(5)">5 min</button>
+    <button onclick="stopMeditation()">Stop</button>
+  </div>
 
-    <p id="meditationStatus"></p>
-  </section>
+  <p id="meditationStatus" class="mt-4 text-cyan-300"></p>
+</section>
 
 </section>
 
@@ -303,22 +304,22 @@ textarea,input{outline:none;}
 
 <script>
 /* --- PAGES --- */
-const pages = ["homePage","moodPage","sleepPage","journalPage","tasksPage","checkupPage","aibuddyPage","focusGamePage"];
+const pages = ["homePage","moodPage","breathePage","sleepPage","journalPage","tasksPage","checkupPage","aibuddyPage","focusGamePage"];
 function showPage(pageId){
   pages.forEach(id => document.getElementById(id)?.classList.add("hidden"));
-  const homeMeditation = document.getElementById("homeMeditation");
+
   const newPage = document.getElementById(pageId);
   if(newPage){ 
     newPage.classList.remove("hidden");
     gsap.from(newPage,{opacity:0,y:20,duration:0.6});
-if (pageId === "homePage") {
-  homeMeditation.classList.remove("hidden");
-} else {
-  homeMeditation.classList.add("hidden");
-  stopMeditation(); // 🛑 VERY IMPORTANT
-}
+  }
+
+  // Stop meditation if user leaves breathe page
+  if(pageId !== "breathePage"){
+    stopMeditation();
   }
 }
+
 document.addEventListener("DOMContentLoaded", ()=>showPage("homePage"));
 
 /* --- MOOD --- */
@@ -1269,6 +1270,7 @@ showPage = function(pageId){
 
 </body>
 </html>
+
 
 
 
